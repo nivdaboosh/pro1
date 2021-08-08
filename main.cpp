@@ -5,6 +5,7 @@ using std::cout;
 using std::endl;
 
 #include <fstream>
+#include <vector>
 
 using std::ifstream;
 using namespace std;
@@ -13,36 +14,45 @@ using namespace std;
 #include <cstdlib>
 #include <sstream>
 #include <string>
-// למה יש פה שגיאה אין לי שמץ
-string theType(Iris iris, Iris[] others){
-    int[others.length] distances;
-    for (int i = 0; i < others.length; ++i) {
-        iris.getDistance(others[i]);
+
+string theType(Iris iris, std::vector<Iris> others, int k) {
+    std::vector<double> distances;
+    for (int i = 0; i < others.size(); ++i) {
+        distances[i] = iris.getDistance(others[i]);
     }
+    std::sort(distances, k);
     // עכשיו למצוא את ה k הכי נמוכים ולספור את הטיפוסים של others במקומות של מה שמצאנו
 }
-int main(int k, char **pathU, char** pathC) {
+
+std::vector<Iris> input(char **path, bool isClassified, std::vector<Iris> others, int k) {
+    ifstream file(reinterpret_cast<FILE *>(path));
+    std::vector<Iris> irises;
     char *myText;
-    ifstream classified(reinterpret_cast<FILE *>(pathC));
-    ifstream unClassified(reinterpret_cast<FILE *>(pathU));
-    string output1 = std::strtok(myText, ",");
-    string output2 = std::strtok(nullptr, ",");
-    std::cout << output1 << output2;
-    int place=0;
-    Iris[] irises;
-    // אתה קולט כל פעם שורה אחת ועושה לה strtok
-    //  כדי לקלוט את הנתונים שלה וליצור עצם חדש מסוג אירוס במערך
-    // יש מצב שעדיף להשתמש במבנה נתונים אחר כי לא ידוע לנו הגודל בהתחלה
-    // משהו לא עובד לי בסינטקס ואני לא מבין מה קורה פה בכל מקרה
-    while (std::move(std::getline(classified, myText))) {
-        string x = std::strtok(std::getline(classified, myText), ",");
-        string y = std::strtok(nullptr, ",");
-        string z = std::strtok(nullptr, ",");
-        string w = std::strtok(nullptr, ",");
-        string type = std::strtok(nullptr, ",");
-        irises[place] = new Iris(x, y, z, w, type);
+    int place = 0;
+    while (std::getline(file, myText)) {
+        double x = std::stod(std::strtok(myText, ","));
+        double y = std::stod(std::strtok(nullptr, ","));
+        double z = std::stod(std::strtok(nullptr, ","));
+        double w = std::stod(std::strtok(nullptr, ","));
+        string type;
+        if (isClassified) {
+            type = std::strtok(nullptr, ",");
+        } else {
+            Iris helper = Iris(x, y, z, w, "");
+            type = theType(helper,others, k);
+        }
+        irises[place] = Iris(x, y, z, w, type);
         place++;
     }
-    classified.close();
+    file.close();
+}
+
+int main(int k, char **pathU, char **pathC) {
+    std::vector<Iris> nullVector;
+    std::vector<Iris> classified = input(pathC, true, nullVector, k);
+    std::vector<Iris> irises = input(pathC, false, classified, k);
+    for (int i = 0; i < irises.size(); ++i) {
+
+    }
     return 0;
 }
